@@ -11,7 +11,7 @@ export default class PendingBlock extends Block {
     this.nonce++;
     const dataStr = `${this.idx}${this.timestamp}${this.prevHash}${this.nonce}`;
 
-    this.hash = Crypto.SHA256(dataStr);
+    this.hash = Crypto.SHA256Hex(dataStr);
     return this.hash;
   }
 
