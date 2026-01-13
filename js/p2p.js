@@ -5,17 +5,27 @@ import Node from "./node.js";
 import Logger from "./logger.js";
 
 export default class P2p {
-  constructor() {
+  /**
+   * @param {"node"|"seed"} type
+   */
+  constructor(type) {
     this.logger = new Logger("P2p");
     this.setSeeds();
 
-    //this.startSeed();
-    this.startNode();
+    const port = String(Math.floor(Math.random() * (8999 - 8335 + 1)) + 8335);
+    if (type == "seed")
+      this.node = new Node({ p2p: this, port: "8334", ip: "localhost", type });
+    else this.node = new Node({ p2p: this, port, ip: "localhost", type });
+    this.logger.info(
+      "Initialized node:\n" + JSON.stringify(this.node.toJSON(), null, 2)
+    );
+    if (type == "node") this.startNode();
+    else this.startSeed();
   }
 
   startSeed() {
     this.logger.info("Starting as seed");
-    const wss = new Server(this.port, {
+    const wss = new Server(this.node.port, {
       cors: { origin: "*" },
     });
 
@@ -30,7 +40,7 @@ export default class P2p {
         }
 
         ws.emit("connectionAccepted");
-        const node = new Node({ ...nodeJSON, ws });
+        const node = new Node({ ...nodeJSON, ws, p2p: this });
         this.nodes.push(node);
         this.logger.info("Established node connection");
       });
@@ -43,6 +53,9 @@ export default class P2p {
       await this.getSeedConnection().catch((e) => {
         this.logger.abortWithError(e);
       });
+      const node = await this.getRandomNode("seed").getRandomNode("node");
+      if (!node) this.logger.warn("No active node found, starting network");
+      else this.logger.info(`Entrance node found (${node.ip}:${node.port})`);
     });
   }
 
@@ -63,7 +76,7 @@ export default class P2p {
           continue;
         }
 
-        const node = new Node({ ...seed, ws });
+        const node = new Node({ ...seed, ws, p2p: this });
         this.nodes.push(node);
         this.logger.info("Established seed connection");
         return resolve();
@@ -78,14 +91,13 @@ export default class P2p {
    */
   trySeed(seed) {
     return new Promise((resolve, reject) => {
-      const ws = io(`http://${seed.ip}:${seed.port}`);
+      const ws = io(`http://${seed.ip}:${seed.port}`, {
+        reconnection: false,
+      });
 
       ws.on("connect", () => {
         this.logger.info("Established open connection");
-        ws.emit(
-          "init",
-          JSON.stringify({ ip: "0.0.0.0", port: "12345", type: "node" })
-        );
+        ws.emit("init", JSON.stringify(this.node.toJSON()));
         ws.on("connectionAccepted", () => {
           resolve(ws);
         });
@@ -142,6 +154,35 @@ export default class P2p {
   }
 
   /**
+   * @param {"node"|"seed"} type
+   * @param  {...Node} exclusionNodes
+   * @returns {Node|null}
+   */
+  getRandomNode(type = null, ...exclusionNodes) {
+    let selectedNodes = this.nodes.filter(
+      (node) => (node.type == type || !type) && !exclusionNodes.includes(node)
+    );
+
+    if (selectedNodes.length == 0) return null;
+    return selectedNodes[Math.floor(Math.random() * selectedNodes.length)];
+  }
+  /**
+   * @param {Node} node
+   */
+  removeNode(node) {
+    const idx = this.nodes.indexOf(node);
+    if (idx == -1) return this.logger.warn("Tried removeing nonexistent node");
+
+    this.nodes.splice(idx, 1);
+    this.logger.info("Closed connection with node");
+
+    if (node.type !== "seed") return;
+    this.logger.warn("Seed disconnected");
+    this.getSeedConnection().catch((err) => {
+      this.logger.abortWithError(err);
+    });
+  }
+  /**
    * @type {WebSocketServer}
    */
   wss;
@@ -154,8 +195,10 @@ export default class P2p {
    * @type {Node[]}
    */
   nodes = [];
-  port = 8334;
-
+  /**
+   * @type {Node}
+   */
+  node;
   /**
    * @type {Logger}
    */
