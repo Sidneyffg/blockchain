@@ -21,9 +21,15 @@ export default class Node {
     ws.on("disconnect", () => {
       this.p2p.removeNode(this);
     });
-    ws.on("getRandomNode", (type, cb) => {
+    ws.on("getRandomNodeData", (type, cb) => {
       const randomNode = this.p2p.getRandomNode(type, this);
-      cb(randomNode);
+      if (!randomNode) return cb(null);
+      cb(randomNode.toJSON());
+    });
+    ws.on("getNodeDataList", (type, cb) => {
+      const nodeList = this.p2p.filterNodes(type, this);
+      const nodeDataList = nodeList.map((node) => node.toJSON());
+      cb(nodeDataList);
     });
   }
 
@@ -31,10 +37,22 @@ export default class Node {
    * @param {"node"|"seed"} type
    * @returns {Promise<Node|null>}
    */
-  getRandomNode(type) {
+  getRandomNodeData(type) {
     return new Promise((resolve) => {
-      this.ws.emit("getRandomNode", type, (node) => {
-        resolve(node);
+      this.ws.emit("getRandomNodeData", type, (nodeData) => {
+        if (!nodeData) return resolve(null);
+        else resolve(nodeData);
+      });
+    });
+  }
+  /**
+   * @param {"node"|"seed"} type
+   * @returns {Promise<Node[]>}
+   */
+  getNodeDataList(type) {
+    return new Promise((resolve) => {
+      this.ws.emit("getNodeDataList", type, (nodes) => {
+        resolve(nodes);
       });
     });
   }
