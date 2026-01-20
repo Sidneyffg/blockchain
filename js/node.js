@@ -31,6 +31,9 @@ export default class Node {
       const nodeDataList = nodeList.map((node) => node.toJSON());
       cb(nodeDataList);
     });
+    ws.on("getLastNodeData", (cb) => {
+      
+    })
   }
 
   /**

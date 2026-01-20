@@ -1,12 +1,24 @@
 import Block from "./block.js";
 import PendingBlock from "./pendingBlock.js";
+import P2p from "./p2p.js";
+import Logger from "./logger.js";
 import fs from "fs";
 
 export default class Blockchain {
-  constructor() {
-    this.load();
+  /**
+   * @param {"node"|"seed"} type
+   */
+  constructor(type) {
+    this.logger = new Logger("Blockchain");
+
+    this.loadBlockChain();
     this.#newPendingBlock();
+
+    this.p2p = new P2p(type, this);
+    this.p2p.on("initialized", () => this.initNetwork());
   }
+
+  initNetwork() {}
 
   /**
    * @param {Block} block
@@ -29,7 +41,7 @@ export default class Blockchain {
     this.pendingBlock = new PendingBlock({ idx, prevHash, txs: [] });
   }
 
-  load() {
+  loadBlockChain() {
     this.blocks = [];
     const data = fs.readFileSync(this.#blockchainDataPath);
     const blockJSONs = JSON.parse(data);
@@ -38,6 +50,7 @@ export default class Blockchain {
       const block = new Block(blockJSON);
       this.blocks.push(block);
     });
+    this.logger.info("Loaded blockchain");
   }
 
   save() {
@@ -54,6 +67,10 @@ export default class Blockchain {
     return this.blocks[this.blocks.length - 1];
   }
   /**
+   * @type {P2p}
+   */
+  p2p;
+  /**
    * @type {PendingBlock}
    */
   pendingBlock;
@@ -62,4 +79,8 @@ export default class Blockchain {
    */
   blocks = [];
   #blockchainDataPath = `${process.cwd()}/blockchain.json`;
+  /**
+   * @type {Logger}
+   */
+  logger;
 }

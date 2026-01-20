@@ -1,15 +1,18 @@
 import fs from "fs";
 import { Server } from "socket.io";
 import { io } from "socket.io-client";
+import Blockchain from "./blockchain.js";
 import Node from "./node.js";
 import Logger from "./logger.js";
 
 export default class P2p {
   /**
    * @param {"node"|"seed"} type
+   * @param {Blockchain} blockchain
    */
-  constructor(type) {
+  constructor(type, blockchain) {
     this.logger = new Logger("P2p");
+    this.blockchain = blockchain;
     this.setSeeds();
 
     const port = String(Math.floor(Math.random() * (8999 - 8335 + 1)) + 8335);
@@ -46,6 +49,8 @@ export default class P2p {
       await this.connectNodeList(nodeDataList);
 
       this.logger.info("Finished node setup");
+
+      this.#emit("initialized");
     });
   }
 
@@ -126,6 +131,8 @@ export default class P2p {
     });
   }
 
+  //getLastNode
+
   setSeeds() {
     const data = fs.readFileSync(this.#seedsPath);
     const seedsJSON = JSON.parse(data);
@@ -135,6 +142,26 @@ export default class P2p {
       this.seeds.push(new Node(seedJSON));
     });
   }
+  /**
+   * @param {"initialized"} type
+   * @param  {...any} data
+   */
+  #emit(type, ...data) {
+    this.callbacks.forEach((callback) => {
+      if (callback.type == type) callback.cb(...data);
+    });
+  }
+  /**
+   * @param {"initialized"} type
+   * @param {() => void} cb
+   */
+  on(type, cb) {
+    this.callbacks.push({ type, cb });
+  }
+  /**
+   * @type {{type:"initialized",cb:()=> void}[]}
+   */
+  callbacks = [];
   /**
    * @param {string} data
    * @param {"init"} type
@@ -243,6 +270,10 @@ export default class P2p {
    * @type {Node}
    */
   node;
+  /**
+   * @type {Blockchain}
+   */
+  blockchain;
   /**
    * @type {Logger}
    */
