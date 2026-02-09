@@ -18,7 +18,13 @@ export default class Blockchain {
     this.p2p.on("initialized", () => this.initNetwork());
   }
 
-  initNetwork() {}
+  async initNetwork() {
+    const lastBlockDatas = await this.p2p.getDataFromMaxNodes(
+      "getLastBlockData",
+      5,
+    );
+    console.log(lastBlockDatas);
+  }
 
   /**
    * @param {Block} block

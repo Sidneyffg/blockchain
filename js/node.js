@@ -1,5 +1,6 @@
 import WebSocket from "ws";
 import P2p from "./p2p.js";
+import Block from "./block.js";
 
 export default class Node {
   /**
@@ -31,9 +32,11 @@ export default class Node {
       const nodeDataList = nodeList.map((node) => node.toJSON());
       cb(nodeDataList);
     });
-    ws.on("getLastNodeData", (cb) => {
-      
-    })
+    ws.on("getLastBlockData", (cb) => {
+      const lastBlock = this.p2p.blockchain.lastBlock;
+      if (!lastBlock) return cb(null);
+      cb(JSON.stringify(lastBlock));
+    });
   }
 
   /**
@@ -56,6 +59,24 @@ export default class Node {
     return new Promise((resolve) => {
       this.ws.emit("getNodeDataList", type, (nodes) => {
         resolve(nodes);
+      });
+    });
+  }
+
+  /**
+   * @returns {Promise<Block|null>}
+   */
+  getLastBlockData() {
+    return new Promise((resolve) => {
+      console.log(this.port);
+      this.ws.emit("getLastBlockData", (block) => {
+        if (!block) return resolve(null);
+        try {
+          const blockData = JSON.parse(block);
+          resolve(blockData);
+        } catch (err) {
+          resolve(null);
+        }
       });
     });
   }

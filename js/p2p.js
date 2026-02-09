@@ -20,7 +20,7 @@ export default class P2p {
       this.node = new Node({ p2p: this, port: "8334", ip: "localhost", type });
     else this.node = new Node({ p2p: this, port, ip: "localhost", type });
     this.logger.info(
-      "Initialized node:\n" + JSON.stringify(this.node.toJSON(), null, 2)
+      "Initialized node:\n" + JSON.stringify(this.node.toJSON(), null, 2),
     );
     if (type == "node") this.startNode();
     else this.startSeed();
@@ -39,9 +39,8 @@ export default class P2p {
       await this.getSeedConnection().catch((e) => {
         this.logger.abortWithError(e);
       });
-      const nodeDataList = await this.getRandomNode("seed").getNodeDataList(
-        "node"
-      );
+      const nodeDataList =
+        await this.getRandomNode("seed").getNodeDataList("node");
       if (nodeDataList.length == 0)
         this.logger.warn("No active node found, starting network");
       else this.logger.info(`Recieved node list (${nodeDataList.length})`);
@@ -60,7 +59,7 @@ export default class P2p {
       for (let i = 0; i < shuffledSeeds.length; i++) {
         const seed = shuffledSeeds[i];
         this.logger.info(
-          `Establishing seed connection (${seed.ip}:${seed.port})`
+          `Establishing seed connection (${seed.ip}:${seed.port})`,
         );
 
         let ws;
@@ -91,13 +90,13 @@ export default class P2p {
         const ws = await this.tryNode(nodeData).catch((err) => {
           finishedNodes++;
           this.logger.info(
-            `Failed to connected to node (${finishedNodes}/${nodeList.length})`
+            `Failed to connected to node (${finishedNodes}/${nodeList.length})`,
           );
           if (finishedNodes == nodeList.length) resolve();
         });
         finishedNodes++;
         this.logger.info(
-          `Successfully connected to node (${finishedNodes}/${nodeList.length})`
+          `Successfully connected to node (${finishedNodes}/${nodeList.length})`,
         );
         const node = new Node({ ...nodeData, ws, p2p: this });
         this.nodes.push(node);
@@ -131,7 +130,39 @@ export default class P2p {
     });
   }
 
-  //getLastNode
+  /**
+   * @param {number} i
+   * @returns {Node[]}
+   */
+  getMaxNodes(i) {
+    if (i > this.nodes.length) i = this.nodes.length;
+    return this.getShuffledNodes().splice(0, i);
+  }
+
+  /**
+   * @param {"getLastBlockData"} type
+   * @param {number} i
+   */
+  getDataFromMaxNodes(type, i) {
+    return new Promise((resolve) => {
+      const nodes = this.getMaxNodes(i);
+      if (nodes.length == 0) return resolve([]);
+
+      const data = [];
+      let finishedNodes = 0;
+      nodes.forEach(async (node) => {
+        let res;
+        switch (type) {
+          case "getLastBlockData":
+            res = await node.getLastBlockData();
+        }
+        if (res) data.push(res);
+
+        finishedNodes++;
+        if (finishedNodes == nodes.length) resolve(data);
+      });
+    });
+  }
 
   setSeeds() {
     const data = fs.readFileSync(this.#seedsPath);
@@ -190,9 +221,21 @@ export default class P2p {
     const shuffledSeeds = [...this.seeds];
     for (let i = shuffledSeeds.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      shuffledSeeds[i], (shuffledSeeds[j] = shuffledSeeds[j]), shuffledSeeds[i];
+      (shuffledSeeds[i],
+        (shuffledSeeds[j] = shuffledSeeds[j]),
+        shuffledSeeds[i]);
     }
     return shuffledSeeds;
+  }
+  getShuffledNodes() {
+    const shuffledNodes = this.filterNodes("node", this.node);
+    for (let i = shuffledNodes.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      (shuffledNodes[i],
+        (shuffledNodes[j] = shuffledNodes[j]),
+        shuffledNodes[i]);
+    }
+    return shuffledNodes;
   }
   /**
    * @param {"node"|"seed"} type
@@ -201,7 +244,7 @@ export default class P2p {
    */
   filterNodes(type = null, ...exclusionNodes) {
     return this.nodes.filter(
-      (node) => (node.type == type || !type) && !exclusionNodes.includes(node)
+      (node) => (node.type == type || !type) && !exclusionNodes.includes(node),
     );
   }
   /**
