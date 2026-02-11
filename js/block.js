@@ -2,13 +2,14 @@ import Crypto from "./crypto.js";
 import Transaction from "./transaction.js";
 
 export default class Block {
-  constructor({ idx, txs, prevHash, hash, timestamp, nonce }) {
+  constructor({ idx, txs, prevHash, hash, timestamp, nonce, difficulty }) {
     this.idx = idx;
     this.txs = txs;
     this.prevHash = prevHash;
     this.hash = hash;
     this.timestamp = timestamp;
     this.nonce = nonce;
+    this.difficulty = difficulty;
   }
 
   toJSON() {
@@ -19,7 +20,7 @@ export default class Block {
 
   // genHash
   genHash() {
-    const dataStr = `${this.idx}${this.timestamp}${this.prevHash}${this.nonce}`;
+    const dataStr = `${this.idx}-${this.timestamp}-${this.prevHash}-${this.nonce}-${this.difficulty}`;
     this.hash = Crypto.SHA256Hex(dataStr);
     return this.hash;
   }
@@ -33,7 +34,7 @@ export default class Block {
   /**
    * @type {number}
    */
-  difficulty
+  difficulty;
   /**
    * @type {number}
    */

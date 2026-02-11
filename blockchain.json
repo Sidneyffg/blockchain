@@ -1,34 +1,11 @@
 [
   {
+    "difficulty": 5,
     "idx": 0,
-    "timestamp": 1767914409429,
+    "timestamp": 0,
     "prevHash": "",
-    "hash": "7aa956531ebf31f6ac79a8fc8b5909a4075092edeccdf044e166a5d34795ca99",
+    "hash": "ed1bb25f7cf18d7833974ee239ea985c7ce7916e2b9db3b6dcc7b6079ebcb053",
     "txs": [],
-    "nonce": 1
-  },
-  {
-    "idx": 1,
-    "timestamp": 1767914433595,
-    "prevHash": "7aa956531ebf31f6ac79a8fc8b5909a4075092edeccdf044e166a5d34795ca99",
-    "hash": "49f07ba495fd2f344c6abd28c332082bc9acb03c32d113eba57e2cd2224b1b3c",
-    "txs": [],
-    "nonce": 1
-  },
-  {
-    "idx": 2,
-    "timestamp": 1767914434937,
-    "prevHash": "49f07ba495fd2f344c6abd28c332082bc9acb03c32d113eba57e2cd2224b1b3c",
-    "hash": "81053538effed356c1c72e5650390b067a4002cecb156fd03b005a1b4219d497",
-    "txs": [],
-    "nonce": 1
-  },
-  {
-    "idx": 3,
-    "timestamp": 1767914435811,
-    "prevHash": "81053538effed356c1c72e5650390b067a4002cecb156fd03b005a1b4219d497",
-    "hash": "93a712fef6db6aacb68412d80868a06204edaa386638b86c27a4d36dd298bacd",
-    "txs": [],
-    "nonce": 1
+    "nonce": 0
   }
 ]

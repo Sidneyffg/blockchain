@@ -11,7 +11,11 @@ export default class PendingBlock extends Block {
    */
   constructor({ idx, prevHash, prevBlockDuration, prevBlockDifficulty, txs }) {
     const timestamp = Date.now();
-    const difficulty = prevBlockDifficulty * (3e5 / prevBlockDuration);
+    const targetPercentage = prevBlockDuration / 1e4;
+    let difficulty;
+    if (targetPercentage > 8) difficulty = prevBlockDifficulty - 1;
+    else if (targetPercentage < 0.125) difficulty = prevBlockDifficulty + 1;
+    else difficulty = prevBlockDifficulty;
     super({
       idx,
       prevHash,
@@ -33,11 +37,5 @@ export default class PendingBlock extends Block {
     return new Block({ ...this });
   }
 
-  /**
-   *
-   * @param {number} prevBlockDuration
-   */
-  calcDifficulty(prevBlockDuration) {}
-
-  blockTimeMs = 3e5; //5min
+  blockTimeMs = 1e4; //5min
 }

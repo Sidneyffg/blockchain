@@ -14,6 +14,16 @@ export default class Blockchain {
     this.loadBlockChain();
     this.#newPendingBlock();
 
+    /*this.pendingBlock = new PendingBlock({
+      idx: 0,
+      prevHash: "",
+      prevBlockDuration: 1e4,
+      prevBlockDifficulty: 5,
+      txs: [],
+    });
+    this.pendingBlock.hash = this.pendingBlock.genHash();
+    this.setPendingBlock();*/
+
     /*this.pendingBlock.tryNewHash();
     this.setPendingBlock();
     this.pendingBlock.tryNewHash();
@@ -140,10 +150,13 @@ export default class Blockchain {
   }
 
   #newPendingBlock() {
-    const idx = this.lastBlock ? this.lastBlock.idx + 1 : 0;
-    const prevHash = this.lastBlock ? this.lastBlock.hash : "";
-    const prevBlockDuration =
-      this.lastBlock.timestamp - this.blocks[this.lastBlock.idx - 1].timestamp;
+    const idx = this.lastBlock.idx + 1;
+    const prevHash = this.lastBlock.hash;
+
+    const lastBlockTimestamp = this.lastBlock.timestamp
+      ? this.lastBlock.timestamp
+      : Date.now() - 1e4;
+    const prevBlockDuration = Date.now() - lastBlockTimestamp;
     this.pendingBlock = new PendingBlock({
       idx,
       prevHash,
@@ -166,7 +179,6 @@ export default class Blockchain {
   }
 
   save() {
-    return;
     const blockJSONs = [];
     this.blocks.forEach((block) => {
       blockJSONs.push(block.toJSON());
