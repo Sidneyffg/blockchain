@@ -143,7 +143,7 @@ export default class P2p {
    * @param {"getLastBlockData"} type
    * @param {number} i
    */
-  getDataFromMaxNodes(type, i) {
+  getDataFromMaxNodes(type, i, ...params) {
     return new Promise((resolve) => {
       const nodes = this.getMaxNodes(i);
       if (nodes.length == 0) return resolve([]);
@@ -155,6 +155,10 @@ export default class P2p {
         switch (type) {
           case "getLastBlockData":
             res = await node.getLastBlockData();
+            break;
+          case "getBlockDataByIdx":
+            res = await node.getBlockDataByIdx(...params);
+            break;
         }
         if (res) data.push(res);
 

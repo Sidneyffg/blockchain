@@ -37,6 +37,12 @@ export default class Node {
       if (!lastBlock) return cb(null);
       cb(JSON.stringify(lastBlock));
     });
+    ws.on("getBlockDataByIdx", (idx, cb) => {
+      console.log("getBlockDataByIdx", idx);
+      const block = this.p2p.blockchain.blocks[idx];
+      if (!block) return cb(null);
+      cb(JSON.stringify(block));
+    });
   }
 
   /**
@@ -68,8 +74,25 @@ export default class Node {
    */
   getLastBlockData() {
     return new Promise((resolve) => {
-      console.log(this.port);
       this.ws.emit("getLastBlockData", (block) => {
+        if (!block) return resolve(null);
+        try {
+          const blockData = JSON.parse(block);
+          resolve(blockData);
+        } catch (err) {
+          resolve(null);
+        }
+      });
+    });
+  }
+
+  /**
+   * @param {number} idx
+   * @returns {Promise<Block|null>}
+   */
+  getBlockDataByIdx(idx) {
+    return new Promise((resolve) => {
+      this.ws.emit("getBlockDataByIdx", idx, (block) => {
         if (!block) return resolve(null);
         try {
           const blockData = JSON.parse(block);

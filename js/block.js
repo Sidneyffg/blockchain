@@ -17,6 +17,19 @@ export default class Block {
     };
   }
 
+  // genHash
+  genHash() {
+    const dataStr = `${this.idx}${this.timestamp}${this.prevHash}${this.nonce}`;
+    this.hash = Crypto.SHA256Hex(dataStr);
+    return this.hash;
+  }
+
+  // check hash validity
+  isHashValid() {
+    const hash = this.genHash();
+    return hash === this.hash;
+  }
+
   /**
    * @type {number}
    */

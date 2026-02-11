@@ -7,11 +7,9 @@ export default class PendingBlock extends Block {
     super({ idx, prevHash, txs, timestamp, hash: null, nonce: 0 });
   }
 
-  genNewHash() {
+  tryNewHash() {
     this.nonce++;
-    const dataStr = `${this.idx}${this.timestamp}${this.prevHash}${this.nonce}`;
-
-    this.hash = Crypto.SHA256Hex(dataStr);
+    this.hash = this.genHash();
     return this.hash;
   }
 
