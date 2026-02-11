@@ -33,6 +33,10 @@ export default class Block {
   /**
    * @type {number}
    */
+  difficulty
+  /**
+   * @type {number}
+   */
   idx;
   /**
    * @type {number}

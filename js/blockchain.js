@@ -142,7 +142,15 @@ export default class Blockchain {
   #newPendingBlock() {
     const idx = this.lastBlock ? this.lastBlock.idx + 1 : 0;
     const prevHash = this.lastBlock ? this.lastBlock.hash : "";
-    this.pendingBlock = new PendingBlock({ idx, prevHash, txs: [] });
+    const prevBlockDuration =
+      this.lastBlock.timestamp - this.blocks[this.lastBlock.idx - 1].timestamp;
+    this.pendingBlock = new PendingBlock({
+      idx,
+      prevHash,
+      prevBlockDuration,
+      prevBlockDifficulty: this.lastBlock.difficulty,
+      txs: [],
+    });
   }
 
   loadBlockChain() {
