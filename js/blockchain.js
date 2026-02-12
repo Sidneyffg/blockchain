@@ -42,13 +42,13 @@ export default class Blockchain {
     );
     if (peerLastBlockDatas.length == 0) {
       this.logger.info("No blocks found in network, starting new blockchain");
-      return;
+      return this.finishInit();
     }
 
     const peerLastBlockData = this.getMostCommonBlock(peerLastBlockDatas);
     if (this.compareBlocks(peerLastBlockData, this.lastBlock)) {
       this.logger.info("Blockchain is up to date");
-      return;
+      return this.finishInit();
     }
 
     const selfLastBlockIdx = this.lastBlock ? this.lastBlock.idx : 0;
@@ -78,7 +78,17 @@ export default class Blockchain {
       });
       this.save();
     }
+    this.finishInit();
   }
+
+  finishInit() {
+    this.onInitCbs.forEach((cb) => cb());
+  }
+
+  onInit(cb) {
+    this.onInitCbs.push(cb);
+  }
+  onInitCbs = [];
 
   /**
    * @param {number} startIdx
@@ -152,11 +162,15 @@ export default class Blockchain {
   #newPendingBlock() {
     const idx = this.lastBlock.idx + 1;
     const prevHash = this.lastBlock.hash;
+    let prevBlockDuration;
 
-    const lastBlockTimestamp = this.lastBlock.timestamp
-      ? this.lastBlock.timestamp
-      : Date.now() - 1e4;
-    const prevBlockDuration = Date.now() - lastBlockTimestamp;
+    if (idx > 2) {
+      const lastBlockTimestamp = this.lastBlock.timestamp;
+      const seconLastBlockTimestamp =
+        this.blocks[this.blocks.length - 2].timestamp;
+      prevBlockDuration = lastBlockTimestamp - seconLastBlockTimestamp;
+    } else prevBlockDuration = 1e4;
+
     this.pendingBlock = new PendingBlock({
       idx,
       prevHash,

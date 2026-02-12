@@ -20,6 +20,7 @@ export default class Block {
 
   // genHash
   genHash() {
+    this.timestamp = Date.now();
     const dataStr = `${this.idx}-${this.timestamp}-${this.prevHash}-${this.nonce}-${this.difficulty}`;
     this.hash = Crypto.SHA256Hex(dataStr);
     return this.hash;

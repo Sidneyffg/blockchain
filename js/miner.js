@@ -10,21 +10,34 @@ export default class Miner {
   constructor(blockchain, wallet) {
     this.blockchain = blockchain;
     this.wallet = wallet;
-    this.mine();
+    if (blockchain.p2p.node.type == "seed") return;
+    this.blockchain.onInit(() => this.mine());
   }
 
-  mine() {
+  async mine() {
+    this.logger.info("Starting to mine");
+    let count = 0;
     while (true) {
       const pendingBlock = this.blockchain.pendingBlock;
       const hash = pendingBlock.tryNewHash();
       if (hash.startsWith("0".repeat(pendingBlock.difficulty))) {
         this.logger.info(
           "Block mined",
+          "idx:",
           pendingBlock.idx,
-          Date.now() - pendingBlock.timestamp,
+          pendingBlock.timestamp -
+            (this.blockchain.lastBlock?.timestamp
+              ? this.blockchain.lastBlock.timestamp
+              : pendingBlock.timestamp - 1e4) +
+            "ms",
           hash,
         );
         this.blockchain.setPendingBlock();
+      }
+      count++;
+      if (count == 10000) {
+        await new Promise((r) => setTimeout(r, 0));
+        count = 0;
       }
     }
   }
