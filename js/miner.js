@@ -28,11 +28,14 @@ export default class Miner {
           pendingBlock.timestamp -
             (this.blockchain.lastBlock?.timestamp
               ? this.blockchain.lastBlock.timestamp
-              : pendingBlock.timestamp - 1e4) +
+              : pendingBlock.timestamp - 1e3) +
             "ms",
           hash,
         );
         this.blockchain.setPendingBlock();
+        this.blockchain.p2p.filterNodes("node").forEach((node) => {
+          node.emitMinedBlockData(this.blockchain.lastBlock);
+        });
       }
       count++;
       if (count == 10000) {

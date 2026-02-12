@@ -43,8 +43,25 @@ export default class Node {
       if (!block) return cb(null);
       cb(JSON.stringify(block));
     });
+    // onMinedBlockData
+    ws.on("minedBlockData", (blockData) => {
+      try {
+        const blockDataObj = JSON.parse(blockData);
+        const block = new Block(blockDataObj);
+        this.p2p.blockchain.updateWithMinedBlock(block);
+      } catch (err) {
+        console.error("Invalid block data received");
+      }
+    });
   }
 
+  /**
+   * @param {Block} block
+   */
+  emitMinedBlockData(block) {
+    const blockData = JSON.stringify(block.toJSON());
+    this.ws.emit("minedBlockData", blockData);
+  }
   /**
    * @param {"node"|"seed"} type
    * @returns {Promise<Node|null>}

@@ -17,7 +17,7 @@ export default class Blockchain {
     /*this.pendingBlock = new PendingBlock({
       idx: 0,
       prevHash: "",
-      prevBlockDuration: 1e4,
+      prevBlockDuration: 1e3,
       prevBlockDifficulty: 5,
       txs: [],
     });
@@ -67,15 +67,10 @@ export default class Blockchain {
         selfLastBlockIdx + 1,
         peerLastBlockData.idx - 1,
       );
-      console.log(
-        "newBlocksDatas",
-        newBlocksDatas,
-        selfLastBlockIdx + 1,
-        peerLastBlockData.idx - 1,
-      );
       newBlocksDatas.forEach((blockData) => {
         this.addBlock(new Block(blockData));
       });
+      this.#newPendingBlock();
       this.save();
     }
     this.finishInit();
@@ -93,7 +88,7 @@ export default class Blockchain {
   /**
    * @param {number} startIdx
    * @param {number} endIdx
-   * @returns
+   * @returns {Promise<Block[]>}
    */
   getBlocksFromPeers(startIdx, endIdx) {
     return new Promise(async (resolve) => {
@@ -151,6 +146,13 @@ export default class Blockchain {
     this.blocks.push(block);
   }
 
+  updateWithMinedBlock(block) {
+    this.blocks.push(block);
+    this.#newPendingBlock();
+    this.save();
+    this.logger.info(`Added new mined block to blockchain (idx:${block.idx})`);
+  }
+
   setPendingBlock() {
     const block = this.pendingBlock.toBlock();
     this.blocks.push(block);
@@ -169,7 +171,7 @@ export default class Blockchain {
       const seconLastBlockTimestamp =
         this.blocks[this.blocks.length - 2].timestamp;
       prevBlockDuration = lastBlockTimestamp - seconLastBlockTimestamp;
-    } else prevBlockDuration = 1e4;
+    } else prevBlockDuration = 1e3;
 
     this.pendingBlock = new PendingBlock({
       idx,

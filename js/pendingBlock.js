@@ -11,7 +11,8 @@ export default class PendingBlock extends Block {
    */
   constructor({ idx, prevHash, prevBlockDuration, prevBlockDifficulty, txs }) {
     const timestamp = Date.now();
-    const targetPercentage = prevBlockDuration / 1e4;
+    const nonce = Math.round(Math.random() * 1e9);
+    const targetPercentage = prevBlockDuration / 1e3;
     let difficulty;
     if (targetPercentage > 8) difficulty = prevBlockDifficulty - 1;
     else if (targetPercentage < 0.125) difficulty = prevBlockDifficulty + 1;
@@ -22,7 +23,7 @@ export default class PendingBlock extends Block {
       txs,
       timestamp,
       hash: null,
-      nonce: 0,
+      nonce,
       difficulty,
     });
   }
@@ -37,5 +38,5 @@ export default class PendingBlock extends Block {
     return new Block({ ...this });
   }
 
-  blockTimeMs = 1e4; //5min
+  blockTimeMs = 1e3; //5min
 }
